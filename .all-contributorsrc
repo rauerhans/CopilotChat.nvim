@@ -501,6 +501,13 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/22600124?v=4",
       "profile": "https://github.com/junqizhang",
       "contributions": ["code"]
+    },
+    {
+      "login": "Tlunch",
+      "name": "Calum Lynch",
+      "avatar_url": "https://avatars.githubusercontent.com/u/89159592?v=4",
+      "profile": "http://card.calumhub.xyz",
+      "contributions": ["code"]
     }
   ],
   "contributorsPerLine": 7,
