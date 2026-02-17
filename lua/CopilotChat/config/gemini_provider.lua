@@ -1,9 +1,4 @@
-local providers = require("CopilotChat.providers.")
-local constants = require('CopilotChat.constants')
-local notify = require('CopilotChat.notify')
 local utils = require('CopilotChat.utils')
-local curl = require('CopilotChat.utils.curl')
-local files = require('CopilotChat.utils.files')
 
 local function get_gemini_api_key()
   local api_key = os.getenv("GEMINI_API_KEY")
