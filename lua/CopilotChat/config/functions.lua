@@ -91,7 +91,8 @@ return {
   url = {
     group = 'copilot',
     uri = 'https://{url}',
-    description = 'Fetches content from a specified URL. Useful for referencing documentation, examples, or other online resources.',
+    description =
+    'Fetches content from a specified URL. Useful for referencing documentation, examples, or other online resources.',
 
     schema = {
       type = 'object',
@@ -126,107 +127,174 @@ return {
   },
 
   buffer = {
-    group = 'copilot',
-    uri = 'neovim://buffer/{scope}',
-    description = 'Retrieves content from buffer(s) with diagnostics. Scope can be a buffer number, filename, or one of: active, visible, listed, quickfix.',
-
+    group = "copilot",
+    uri = "buffer://{name}",
+    description = "Retrieves content from a specific buffer.",
     schema = {
-      type = 'object',
-      required = { 'scope' },
+      type = "object",
+      required = { "name" },
       properties = {
-        scope = {
-          type = 'string',
-          description = 'Buffer scope: active (current), visible (shown in windows), listed (all listed buffers), quickfix (buffers in quickfix list), or a specific buffer number/filename.',
+        name = {
+          type = "string",
+          description = "Buffer filename to include in chat context.",
           enum = function()
-            local opts = {
-              { display = 'active (current buffer)', value = 'active' },
-              { display = 'visible (all visible buffers)', value = 'visible' },
-              { display = 'listed (all listed buffers)', value = 'listed' },
-              { display = 'quickfix (buffers in quickfix)', value = 'quickfix' },
-            }
-
-            for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-              if utils.buf_valid(buf) and vim.fn.buflisted(buf) == 1 then
-                local name = vim.api.nvim_buf_get_name(buf)
-                if name and name ~= '' then
-                  local display_name = vim.fn.fnamemodify(name, ':~:.')
-                  table.insert(opts, { display = display_name, value = tostring(buf) })
-                end
-              end
-            end
-            return opts
+            local chat_winid = vim.api.nvim_get_current_win()
+            local async = require("plenary.async")
+            local fn = async.wrap(function(callback)
+              Snacks.picker.buffers({
+                confirm = function(picker, item)
+                  picker:close()
+                  -- Return focus to the chat window
+                  if vim.api.nvim_win_is_valid(chat_winid) then
+                    vim.api.nvim_set_current_win(chat_winid)
+                    vim.cmd("normal! a")
+                  end
+                  callback({ item.file })
+                end,
+              })
+            end, 1)
+            return fn()
           end,
-          default = 'active',
         },
       },
     },
-
     resolve = function(input, source)
       utils.schedule_main()
-      local scope = input.scope or 'active'
-      local buffers = {}
-
-      -- Determine which buffers to include based on scope
-      if scope == 'active' then
-        if source and source.bufnr and utils.buf_valid(source.bufnr) then
-          buffers = { source.bufnr }
-        end
-      elseif scope == 'visible' then
-        buffers = vim.tbl_filter(function(b)
-          return utils.buf_valid(b) and vim.fn.buflisted(b) == 1 and #vim.fn.win_findbuf(b) > 0
-        end, vim.api.nvim_list_bufs())
-      elseif scope == 'listed' then
-        buffers = vim.tbl_filter(function(b)
-          return utils.buf_valid(b) and vim.fn.buflisted(b) == 1
-        end, vim.api.nvim_list_bufs())
-      elseif scope == 'quickfix' then
-        local items = vim.fn.getqflist()
-        local file_to_bufnr = {}
-        for _, item in ipairs(items) do
-          local filename = item.filename or vim.api.nvim_buf_get_name(item.bufnr)
-          if filename and item.bufnr and utils.buf_valid(item.bufnr) then
-            file_to_bufnr[filename] = item.bufnr
-          end
-        end
-        buffers = vim.tbl_values(file_to_bufnr)
-      elseif tonumber(scope) then
-        local bufnr = tonumber(scope)
-        if utils.buf_valid(bufnr) then
-          buffers = { bufnr }
+      local name = input.name or vim.api.nvim_buf_get_name(source.bufnr)
+      local found_buf = nil
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_get_name(buf) == name then
+          found_buf = buf
+          break
         end
       end
 
-      if #buffers == 0 then
-        error('No buffers found for input: ' .. scope)
+      if not found_buf then
+        error("Buffer not found: " .. name)
       end
 
-      local results = {}
-      for _, bufnr in ipairs(buffers) do
-        local name = vim.api.nvim_buf_get_name(bufnr)
-        local data, mimetype = resources.get_buffer(bufnr)
-        if data then
-          local diag_text = get_diagnostics_text(bufnr)
-          if diag_text ~= '' then
-            data = data .. diag_text
-          end
-
-          table.insert(results, {
-            uri = 'buffer://' .. bufnr,
-            name = name,
-            mimetype = mimetype,
-            data = data,
-          })
-        end
+      local data, mimetype = resources_get_buffer(found_buf)
+      if not data then
+        error("Buffer not found: " .. name)
       end
 
-      return results
+      return {
+        {
+          uri = "buffer://" .. name,
+          name = name,
+          mimetype = mimetype,
+          data = data,
+        },
+      }
     end,
   },
+
+
+  --buffer = {
+  --  group = 'copilot',
+  --  uri = 'neovim://buffer/{scope}',
+  --  description =
+  --  'Retrieves content from buffer(s) with diagnostics. Scope can be a buffer number, filename, or one of: active, visible, listed, quickfix.',
+
+  --  schema = {
+  --    type = 'object',
+  --    required = { 'scope' },
+  --    properties = {
+  --      scope = {
+  --        type = 'string',
+  --        description =
+  --        'Buffer scope: active (current), visible (shown in windows), listed (all listed buffers), quickfix (buffers in quickfix list), or a specific buffer number/filename.',
+  --        enum = function()
+  --          local opts = {
+  --            { display = 'active (current buffer)',        value = 'active' },
+  --            { display = 'visible (all visible buffers)',  value = 'visible' },
+  --            { display = 'listed (all listed buffers)',    value = 'listed' },
+  --            { display = 'quickfix (buffers in quickfix)', value = 'quickfix' },
+  --          }
+
+  --          for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+  --            if utils.buf_valid(buf) and vim.fn.buflisted(buf) == 1 then
+  --              local name = vim.api.nvim_buf_get_name(buf)
+  --              if name and name ~= '' then
+  --                local display_name = vim.fn.fnamemodify(name, ':~:.')
+  --                table.insert(opts, { display = display_name, value = tostring(buf) })
+  --              end
+  --            end
+  --          end
+  --          return opts
+  --        end,
+  --        default = 'active',
+  --      },
+  --    },
+  --  },
+
+  --  resolve = function(input, source)
+  --    utils.schedule_main()
+  --    local scope = input.scope or 'active'
+  --    local buffers = {}
+
+  --    -- Determine which buffers to include based on scope
+  --    if scope == 'active' then
+  --      if source and source.bufnr and utils.buf_valid(source.bufnr) then
+  --        buffers = { source.bufnr }
+  --      end
+  --    elseif scope == 'visible' then
+  --      buffers = vim.tbl_filter(function(b)
+  --        return utils.buf_valid(b) and vim.fn.buflisted(b) == 1 and #vim.fn.win_findbuf(b) > 0
+  --      end, vim.api.nvim_list_bufs())
+  --    elseif scope == 'listed' then
+  --      buffers = vim.tbl_filter(function(b)
+  --        return utils.buf_valid(b) and vim.fn.buflisted(b) == 1
+  --      end, vim.api.nvim_list_bufs())
+  --    elseif scope == 'quickfix' then
+  --      local items = vim.fn.getqflist()
+  --      local file_to_bufnr = {}
+  --      for _, item in ipairs(items) do
+  --        local filename = item.filename or vim.api.nvim_buf_get_name(item.bufnr)
+  --        if filename and item.bufnr and utils.buf_valid(item.bufnr) then
+  --          file_to_bufnr[filename] = item.bufnr
+  --        end
+  --      end
+  --      buffers = vim.tbl_values(file_to_bufnr)
+  --    elseif tonumber(scope) then
+  --      local bufnr = tonumber(scope)
+  --      if utils.buf_valid(bufnr) then
+  --        buffers = { bufnr }
+  --      end
+  --    end
+
+  --    if #buffers == 0 then
+  --      error('No buffers found for input: ' .. scope)
+  --    end
+
+  --    local results = {}
+  --    for _, bufnr in ipairs(buffers) do
+  --      local name = vim.api.nvim_buf_get_name(bufnr)
+  --      local data, mimetype = resources.get_buffer(bufnr)
+  --      if data then
+  --        local diag_text = get_diagnostics_text(bufnr)
+  --        if diag_text ~= '' then
+  --          data = data .. diag_text
+  --        end
+
+  --        table.insert(results, {
+  --          uri = 'buffer://' .. bufnr,
+  --          name = name,
+  --          mimetype = mimetype,
+  --          data = data,
+  --        })
+  --      end
+  --    end
+
+  --    return results
+  --  end,
+  --},
 
   selection = {
     group = 'copilot',
     uri = 'neovim://selection',
-    description = 'Includes the content of the current visual selection with diagnostics. Useful for discussing specific code snippets or text blocks.',
+    description =
+    'Includes the content of the current visual selection with diagnostics. Useful for discussing specific code snippets or text blocks.',
 
     resolve = function(_, source)
       utils.schedule_main()
@@ -283,7 +351,8 @@ return {
   glob = {
     group = 'copilot',
     uri = 'files://glob/{pattern}',
-    description = 'Lists filenames matching a pattern in your workspace. Useful for discovering relevant files or understanding the project structure.',
+    description =
+    'Lists filenames matching a pattern in your workspace. Useful for discovering relevant files or understanding the project structure.',
 
     schema = {
       type = 'object',
@@ -315,7 +384,8 @@ return {
   grep = {
     group = 'copilot',
     uri = 'files://grep/{pattern}',
-    description = 'Searches for a pattern across files in your workspace. Helpful for finding specific code elements or patterns.',
+    description =
+    'Searches for a pattern across files in your workspace. Helpful for finding specific code elements or patterns.',
 
     schema = {
       type = 'object',
@@ -346,7 +416,8 @@ return {
   gitdiff = {
     group = 'copilot',
     uri = 'git://diff/{target}',
-    description = 'Retrieves git diff information. Requires git to be installed. Useful for discussing code changes or explaining the purpose of modifications.',
+    description =
+    'Retrieves git diff information. Requires git to be installed. Useful for discussing code changes or explaining the purpose of modifications.',
 
     schema = {
       type = 'object',
@@ -393,7 +464,8 @@ return {
 
   bash = {
     group = 'copilot',
-    description = 'Executes a bash command and returns its output. Useful for running shell commands, checking file contents, or gathering system information.',
+    description =
+    'Executes a bash command and returns its output. Useful for running shell commands, checking file contents, or gathering system information.',
 
     schema = {
       type = 'object',
@@ -420,7 +492,8 @@ return {
 
   edit = {
     group = 'copilot',
-    description = 'Applies a unified diff to a file. The diff should be in unified diff format (similar to diff -U0 output).',
+    description =
+    'Applies a unified diff to a file. The diff should be in unified diff format (similar to diff -U0 output).',
 
     schema = {
       type = 'object',
