@@ -83,10 +83,10 @@ local function process_sticky(prompt, config)
   end
 
   if
-    config.remember_as_sticky
-    and config.system_prompt
-    and config.system_prompt ~= M.config.system_prompt
-    and M.config.prompts[config.system_prompt]
+      config.remember_as_sticky
+      and config.system_prompt
+      and config.system_prompt ~= M.config.system_prompt
+      and M.config.prompts[config.system_prompt]
   then
     stickies:set('/' .. config.system_prompt, true)
   end
@@ -236,6 +236,16 @@ function M.open(config)
   config = vim.tbl_deep_extend('force', M.config, config or {})
   utils.return_to_normal_mode()
 
+  -- If no current chat content and we have history, offer to load previous conversation
+  local current_messages = M.chat:get_messages()
+  local has_content = false
+  for _, message in ipairs(current_messages) do
+    if message.content and vim.trim(message.content) ~= '' then
+      has_content = true
+      break
+    end
+  end
+
   M.chat:open(config)
 
   -- Add sticky values from provided config when opening the chat
@@ -264,6 +274,8 @@ end
 
 --- Close the chat window.
 function M.close()
+  -- Auto-save conversation before closing
+  M.auto_save()
   M.chat:close()
 end
 
@@ -354,18 +366,18 @@ function M.select_prompt(config)
   table.sort(keys)
 
   local choices = vim
-    .iter(keys)
-    :map(function(name)
-      return {
-        name = name,
-        description = prompts[name].description,
-        prompt = prompts[name].prompt,
-      }
-    end)
-    :filter(function(choice)
-      return choice.prompt
-    end)
-    :totable()
+      .iter(keys)
+      :map(function(name)
+        return {
+          name = name,
+          description = prompts[name].description,
+          prompt = prompts[name].prompt,
+        }
+      end)
+      :filter(function(choice)
+        return choice.prompt
+      end)
+      :totable()
 
   vim.ui.select(choices, {
     prompt = 'Select prompt action> ',
@@ -600,6 +612,68 @@ function M.save(name, history_path)
   log.info('Saved history to ' .. history_path)
 end
 
+--- Auto-save current conversation with AI-generated filename
+function M.auto_save()
+  local messages = M.chat:get_messages()
+  if #messages == 0 then
+    return
+  end
+
+  -- Find first user message for context
+  local first_user_message = nil
+  for _, message in ipairs(messages) do
+    if message.role == constants.ROLE.USER and message.content and vim.trim(message.content) ~= '' then
+      first_user_message = message.content
+      break
+    end
+  end
+
+  if not first_user_message then
+    return
+  end
+
+  -- Generate filename using AI
+  local prompt = string.format([[
+Generate a concise filename (max 50 chars) for this conversation based on the first user message.
+Rules:
+- Use only lowercase letters, numbers, hyphens, and underscores
+- No spaces or special characters
+- Be descriptive but brief
+- Don't include file extension
+
+First user message: %s]], vim.trim(first_user_message):sub(1, 200))
+
+  async.run(function()
+    local response = client:ask({
+      headless = true,
+      history = {
+        {
+          content = prompt,
+          role = constants.ROLE.USER,
+        },
+      },
+      model = M.config.model,
+      temperature = 0.3,
+    })
+
+    if response and response.message and response.message.content then
+      local filename = vim.trim(response.message.content)
+      -- Clean filename
+      filename = filename:gsub('[^%w%-_]', '_'):gsub('_+', '_'):gsub('^_+', ''):gsub('_+$', '')
+      if filename == '' then
+        filename = 'chat_' .. os.date('%Y%m%d_%H%M%S')
+      end
+
+      utils.schedule_main()
+      M.save(filename)
+    else
+      -- Fallback filename
+      local fallback = 'chat_' .. os.date('%Y%m%d_%H%M%S')
+      M.save(fallback)
+    end
+  end)
+end
+
 --- Load the chat history from a file.
 ---@param name string?
 ---@param history_path string?
@@ -635,6 +709,58 @@ function M.load(name, history_path)
   end
 
   finish(#history == 0)
+end
+
+--- List and load previous conversations
+function M.load_history()
+  local history_path = M.config.history_path
+  if not history_path then
+    log.warn('History path not configured')
+    return
+  end
+
+  history_path = vim.fs.normalize(history_path)
+  if not vim.fn.isdirectory(history_path) then
+    log.warn('History directory does not exist: ' .. history_path)
+    return
+  end
+
+  -- Get all JSON files in history directory
+  local files = vim.fn.glob(history_path .. '/*.json', false, true)
+  if #files == 0 then
+    log.info('No conversation history found')
+    return
+  end
+
+  -- Sort by modification time (newest first)
+  table.sort(files, function(a, b)
+    local stat_a = vim.loop.fs_stat(a)
+    local stat_b = vim.loop.fs_stat(b)
+    return (stat_a and stat_a.mtime.sec or 0) > (stat_b and stat_b.mtime.sec or 0)
+  end)
+
+  local choices = {}
+  for _, file in ipairs(files) do
+    local name = vim.fn.fnamemodify(file, ':t:r')
+    local stat = vim.loop.fs_stat(file)
+    local mtime = stat and os.date('%Y-%m-%d %H:%M', stat.mtime.sec) or 'Unknown'
+    table.insert(choices, {
+      name = name,
+      path = file,
+      display = string.format('%s (%s)', name, mtime),
+    })
+  end
+
+  vim.ui.select(choices, {
+    prompt = 'Load conversation > ',
+    format_item = function(item)
+      return item.display
+    end,
+  }, function(choice)
+    if choice then
+      M.load(choice.name)
+    end
+  end)
 end
 
 --- Set the log level
