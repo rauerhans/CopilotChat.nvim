@@ -90,6 +90,11 @@ vim.api.nvim_create_user_command('CopilotChatReset', function()
   local chat = require('CopilotChat')
   chat.reset()
 end, { force = true })
+vim.api.nvim_create_user_command('CopilotChatHistory', function()
+  local chat = require('CopilotChat')
+  chat.load_history()
+end, { force = true })
+
 
 local function complete_load()
   local chat = require('CopilotChat')
@@ -103,14 +108,29 @@ local function complete_load()
 
   return options
 end
+--vim.api.nvim_create_user_command('CopilotChatSave', function(args)
+--  local chat = require('CopilotChat')
+--  chat.save(args.args)
+--end, { nargs = '*', force = true, complete = complete_load })
 vim.api.nvim_create_user_command('CopilotChatSave', function(args)
   local chat = require('CopilotChat')
-  chat.save(args.args)
-end, { nargs = '*', force = true, complete = complete_load })
+  local name = args.args and vim.trim(args.args) or nil
+  if name and name ~= '' then
+    chat.save(name)
+  else
+    chat.auto_save()
+  end
+end, {
+  nargs = '?',
+  desc = 'Save current conversation',
+})
+
 vim.api.nvim_create_user_command('CopilotChatLoad', function(args)
   local chat = require('CopilotChat')
   chat.load(args.args)
 end, { nargs = '*', force = true, complete = complete_load })
+
+
 
 -- Store the current directory to window when directory changes
 -- I dont think there is a better way to do this that functions
