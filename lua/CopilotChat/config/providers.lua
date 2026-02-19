@@ -335,7 +335,7 @@ local function extract_text_from_parts(parts)
       -- Responses API: parts have type field
       if part.type == 'text' or part.type == 'output_text' or part.type == 'input_text' then
         content = content .. (part.text or '')
-      -- Fallback for simpler structures
+        -- Fallback for simpler structures
       elseif part.text then
         content = content .. part.text
       end
@@ -408,7 +408,7 @@ local function prepare_responses_output(output)
     elseif output.type == 'response.failed' then
       finish_reason = 'error: ' .. (output.error and output.error.message or 'unknown error')
     end
-  -- Handle non-streaming response
+    -- Handle non-streaming response
   elseif output.response then
     local response = output.response
     if response.output and #response.output > 0 then
@@ -538,13 +538,13 @@ M.copilot = {
     end
 
     return {
-      ['Authorization'] = 'Bearer ' .. response.body.token,
-      ['Editor-Version'] = EDITOR_VERSION,
-      ['Editor-Plugin-Version'] = 'CopilotChat.nvim/*',
-      ['Copilot-Integration-Id'] = 'vscode-chat',
-      ['x-github-api-version'] = '2025-10-01',
-    },
-      response.body.expires_at
+          ['Authorization'] = 'Bearer ' .. response.body.token,
+          ['Editor-Version'] = EDITOR_VERSION,
+          ['Editor-Plugin-Version'] = 'CopilotChat.nvim/*',
+          ['Copilot-Integration-Id'] = 'vscode-chat',
+          ['x-github-api-version'] = '2025-10-01',
+        },
+        response.body.expires_at
   end,
 
   get_info = function()
@@ -608,29 +608,29 @@ M.copilot = {
     end
 
     local models = vim
-      .iter(response.body.data)
-      :filter(function(model)
-        return model.capabilities.type == 'chat' and model.model_picker_enabled
-      end)
-      :map(function(model)
-        local supported_endpoints = model.supported_endpoints or {}
-        -- Pre-compute whether this model uses the Responses API
-        local use_responses = vim.tbl_contains(supported_endpoints, '/responses')
+        .iter(response.body.data)
+        :filter(function(model)
+          return model.capabilities.type == 'chat' and model.model_picker_enabled
+        end)
+        :map(function(model)
+          local supported_endpoints = model.supported_endpoints or {}
+          -- Pre-compute whether this model uses the Responses API
+          local use_responses = vim.tbl_contains(supported_endpoints, '/responses')
 
-        return {
-          id = model.id,
-          name = model.name,
-          tokenizer = model.capabilities.tokenizer,
-          max_input_tokens = model.capabilities.limits.max_prompt_tokens,
-          max_output_tokens = model.capabilities.limits.max_output_tokens,
-          streaming = model.capabilities.supports.streaming,
-          tools = model.capabilities.supports.tool_calls,
-          policy = not model['policy'] or model['policy']['state'] == 'enabled',
-          version = model.version,
-          use_responses = use_responses,
-        }
-      end)
-      :totable()
+          return {
+            id = model.id,
+            name = model.name,
+            tokenizer = model.capabilities.tokenizer,
+            max_input_tokens = model.capabilities.limits.max_prompt_tokens,
+            max_output_tokens = model.capabilities.limits.max_output_tokens,
+            streaming = model.capabilities.supports.streaming,
+            tools = model.capabilities.supports.tool_calls,
+            policy = not model['policy'] or model['policy']['state'] == 'enabled',
+            version = model.version,
+            use_responses = use_responses,
+          }
+        end)
+        :totable()
 
     local name_map = {}
     for _, model in ipairs(models) do
@@ -734,21 +734,21 @@ M.github_models = {
     end
 
     return vim
-      .iter(response.body)
-      :map(function(model)
-        return {
-          id = model.id,
-          name = model.name,
-          tokenizer = 'o200k_base', -- GitHub Models doesn't expose tokenizer info
-          max_input_tokens = model.limits and model.limits.max_input_tokens,
-          max_output_tokens = model.limits and model.limits.max_output_tokens,
-          streaming = model.capabilities and vim.tbl_contains(model.capabilities, 'streaming') or false,
-          tools = model.capabilities and vim.tbl_contains(model.capabilities, 'tool-calling') or false,
-          reasoning = model.capabilities and vim.tbl_contains(model.capabilities, 'reasoning') or false,
-          version = model.version,
-        }
-      end)
-      :totable()
+        .iter(response.body)
+        :map(function(model)
+          return {
+            id = model.id,
+            name = model.name,
+            tokenizer = 'o200k_base', -- GitHub Models doesn't expose tokenizer info
+            max_input_tokens = model.limits and model.limits.max_input_tokens,
+            max_output_tokens = model.limits and model.limits.max_output_tokens,
+            streaming = model.capabilities and vim.tbl_contains(model.capabilities, 'streaming') or false,
+            tools = model.capabilities and vim.tbl_contains(model.capabilities, 'tool-calling') or false,
+            reasoning = model.capabilities and vim.tbl_contains(model.capabilities, 'reasoning') or false,
+            version = model.version,
+          }
+        end)
+        :totable()
   end,
 
   prepare_input = M.copilot.prepare_input,
@@ -758,5 +758,12 @@ M.github_models = {
     return 'https://models.github.ai/inference/chat/completions'
   end,
 }
+
+local gemini_providers = require('CopilotChat.config.gemini_provider')
+for name, provider in pairs(gemini_providers) do
+  M[name] = provider
+end
+
+
 
 return M
