@@ -109,7 +109,7 @@ M.load_prompts = function(prompt_dir)
 
   for _, file_path in ipairs(prompt_files) do
     local basename = vim.fn.fnamemodify(file_path, ":t:r")
-    local prompt = read_prompt_file(basename)
+    local prompt = M.read_prompt_file(basename)
     prompts[basename] = {
       prompt = prompt,
       system_prompt = prompt,
@@ -137,7 +137,7 @@ M.get_config_by_filetype = function()
 
   -- Sort FILETYPE_CONFIGS by priority, descending
   local sorted_configs = {}
-  for _, config in pairs(FILETYPE_CONFIGS) do
+  for _, config in pairs(M.FILETYPE_CONFIGS) do
     table.insert(sorted_configs, config)
   end
   table.sort(sorted_configs, function(a, b)
@@ -177,7 +177,7 @@ M.get_config_by_filetype = function()
       if config.alternate then
         -- For each pattern, try to find the alternate file
         for _, pattern in ipairs(config.patterns or {}) do
-          local alternate = get_alternate_file(pattern, config.alternate)
+          local alternate = M.get_alternate_file(pattern, config.alternate)
           if alternate then
             config.prompts = config.prompts or {}
             table.insert(config.prompts, #config.prompts + 1, "#file:" .. alternate)
@@ -202,7 +202,7 @@ M.get_sticky_prompts = function()
   local sticky = {}
 
   -- Get filetype-specific prompts
-  local ft_config = get_config_by_filetype()
+  local ft_config = M.get_config_by_filetype()
   local prompts = ft_config and ft_config.prompts or {}
 
   -- Add filetype-specific prompts
