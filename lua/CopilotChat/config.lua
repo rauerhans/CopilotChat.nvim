@@ -70,8 +70,13 @@ return {
 
   temperature = 0.1,                                                                        -- Result temperature
   headless = false,                                                                         -- Do not write to chat buffer and use history (useful for using custom processing)
-  callback = nil,                                                                           -- Function called when full response is received
-  remember_as_sticky = true,                                                                -- Remember config as sticky prompts when asking questions
+  --callback = nil,                                                                           -- Function called when full response is received
+  callback = function(response)
+    save_chat(response)
+    -- Scroll to the bottom of the chat window
+    vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(0), 0 })
+  end,
+  remember_as_sticky = true, -- Remember config as sticky prompts when asking questions
 
   -- default window options
   window = {
@@ -89,7 +94,8 @@ return {
     blend = 0,              -- window blend (transparency), 0-100, 0 is opaque, 100 is fully transparent
   },
 
-  show_help = true,                 -- Shows help message as virtual lines when waiting for user input
+  show_help = false,                -- Shows help message as virtual lines when waiting for user input
+  --show_help = true,                -- Shows help message as virtual lines when waiting for user input
   show_folds = true,                -- Shows folds for sections in chat
   auto_fold = false,                -- Automatically non-assistant messages in chat (requires 'show_folds' to be true)
   highlight_selection = true,       -- Highlight selection
@@ -120,21 +126,23 @@ return {
   history_path = vim.fn.stdpath('data') .. '/copilotchat_history', -- Default path to stored history
 
   headers = {
-    user = 'User',         -- Header to use for user questions
-    assistant = 'Copilot', -- Header to use for AI answers
-    tool = 'Tool',         -- Header to use for tool calls
+    user = "꠵ User ",
+    assistant = "꠵ Assistant ",
+    tool = "꠵ Tool ",
   },
 
   separator = '───', -- Separator to use in chat
 
-  -- default providers
+
+  -- default providers (includes gemini)
   providers = require('CopilotChat.config.providers'),
 
-  -- default functions
+  -- default functions (includes better functions)
   functions = require('CopilotChat.config.functions'),
 
   -- default prompts
-  prompts = require('CopilotChat.config.prompts'),
+  prompts = require('CopilotChat.config.betterprompts').load_prompts(vim.fn.stdpath("config") .. "/prompts"),
+
 
   -- default mappings
   mappings = require('CopilotChat.config.mappings'),
