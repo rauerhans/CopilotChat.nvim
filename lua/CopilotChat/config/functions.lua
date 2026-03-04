@@ -1,7 +1,7 @@
 local resources = require('CopilotChat.resources')
 local utils = require('CopilotChat.utils')
 local files = require('CopilotChat.utils.files')
-local betterfunctions = require('CopilotChat.config.betterfunctions')
+local extendedfunctions = require('CopilotChat.config.extendedfunctions')
 
 --- Get diagnostics for a buffer and format them as text
 ---@param bufnr number
@@ -50,7 +50,7 @@ end
 
 ---@type table<string, CopilotChat.config.functions.Function>
 return {
-  file = betterfunctions.file,
+  file = extendedfunctions.file,
 
   --file = {
   --  group = 'copilot',
@@ -129,7 +129,7 @@ return {
     end,
   },
 
-  buffer = betterfunctions.buffer,
+  buffer = extendedfunctions.buffer,
 
 
   -- ORIGINAL UPSTREAM BUFFER NOT USING IT
@@ -356,7 +356,7 @@ return {
     end,
   },
 
-  gitdiff = betterfunctions.gitdiff,
+  gitdiff = extendedfunctions.gitdiff,
 
   --gitdiff = {
   --  group = 'copilot',
