@@ -92,7 +92,7 @@ M.FILETYPE_CONFIGS = {
   },
 }
 
-M.read_prompt_file = function(basename)
+local read_prompt_file = function(basename)
   local config_dir = tostring(vim.fn.stdpath("config"))
   local prompt_dir = vim.fs.joinpath(config_dir, "prompts")
   local file_path = vim.fs.joinpath(prompt_dir, string.format("%s.md", string.lower(basename)))
@@ -103,23 +103,8 @@ M.read_prompt_file = function(basename)
   return table.concat(vim.fn.readfile(file_path), "\n")
 end
 
-M.load_prompts = function(prompt_dir)
-  local prompts = {}
-  local prompt_files = vim.fn.glob(prompt_dir .. "/*.md", false, true)
 
-  for _, file_path in ipairs(prompt_files) do
-    local basename = vim.fn.fnamemodify(file_path, ":t:r")
-    local prompt = M.read_prompt_file(basename)
-    prompts[basename] = {
-      prompt = prompt,
-      system_prompt = prompt,
-    }
-  end
-
-  return prompts
-end
-
-M.get_alternate_file = function(file_ext, alternate_ext)
+local get_alternate_file = function(file_ext, alternate_ext)
   local current_file = vim.fn.expand("%:p")
   local source_file = current_file:gsub(file_ext, alternate_ext)
   if vim.fn.filereadable(source_file) == 1 then
@@ -131,7 +116,7 @@ M.get_alternate_file = function(file_ext, alternate_ext)
   return nil
 end
 
-M.get_config_by_filetype = function()
+local get_config_by_filetype = function()
   local ft = vim.bo.filetype
   local filename = vim.fn.expand("%:t")
 
@@ -177,7 +162,7 @@ M.get_config_by_filetype = function()
       if config.alternate then
         -- For each pattern, try to find the alternate file
         for _, pattern in ipairs(config.patterns or {}) do
-          local alternate = M.get_alternate_file(pattern, config.alternate)
+          local alternate = get_alternate_file(pattern, config.alternate)
           if alternate then
             config.prompts = config.prompts or {}
             table.insert(config.prompts, #config.prompts + 1, "#file:" .. alternate)
@@ -189,6 +174,8 @@ M.get_config_by_filetype = function()
     end
   end
 end
+
+-- ########### only these two are needed outside
 
 M.get_system_prompt = function(action)
   local base_prompt = (action == "explain") and "COPILOT_EXPLAIN"
@@ -202,7 +189,7 @@ M.get_sticky_prompts = function()
   local sticky = {}
 
   -- Get filetype-specific prompts
-  local ft_config = M.get_config_by_filetype()
+  local ft_config = get_config_by_filetype()
   local prompts = ft_config and ft_config.prompts or {}
 
   -- Add filetype-specific prompts
@@ -216,5 +203,22 @@ M.get_sticky_prompts = function()
 
   return sticky
 end
+
+M.load_prompts = function(prompt_dir)
+  local prompts = {}
+  local prompt_files = vim.fn.glob(prompt_dir .. "/*.md", false, true)
+
+  for _, file_path in ipairs(prompt_files) do
+    local basename = vim.fn.fnamemodify(file_path, ":t:r")
+    local prompt = read_prompt_file(basename)
+    prompts[basename] = {
+      prompt = prompt,
+      system_prompt = prompt,
+    }
+  end
+
+  return prompts
+end
+
 
 return M
