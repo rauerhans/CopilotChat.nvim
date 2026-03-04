@@ -137,11 +137,13 @@ return {
   -- default providers (includes gemini)
   providers = require('CopilotChat.config.providers'),
 
-  -- default functions (includes better functions)
+  -- default functions (includes extended functions)
   functions = require('CopilotChat.config.functions'),
 
-  -- default prompts
-  prompts = require('CopilotChat.config.betterprompts').load_prompts(vim.fn.stdpath("config") .. "/prompts"),
+  -- default prompts plus extended prompts from markdown files
+  prompts = vim.tbl_extend('force',
+    require('CopilotChat.config.prompts'),
+    require('CopilotChat.config.extendedprompts').load_prompts(vim.fn.stdpath("config") .. "/prompts")),
 
 
   -- default mappings
