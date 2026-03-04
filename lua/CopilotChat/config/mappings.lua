@@ -73,7 +73,7 @@ return {
 
   close = {
     normal = 'q',
-    insert = '<C-c>',
+    insert = '<C-d>',
     callback = function()
       require('CopilotChat').close()
     end,
@@ -88,7 +88,7 @@ return {
   },
 
   submit_prompt = {
-    normal = '<CR>',
+    normal = '<C-s>',
     insert = '<C-s>',
     callback = function()
       local copilot = require('CopilotChat')
