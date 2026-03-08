@@ -96,6 +96,114 @@ vim.api.nvim_create_user_command('CopilotChatHistory', function()
 end, { force = true })
 
 
+-- open chat
+vim.api.nvim_create_user_command('CopilotChatAssistance', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("assistance")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatGeneric', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("generic")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatSearch', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("search")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatArchitect', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("architect")
+end, { force = true })
+
+-- open chat inline
+vim.api.nvim_create_user_command('CopilotChatAssistance', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("assistance", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatGeneric', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("generic", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatSearch', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("search", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatArchitect', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("architect", { inline = true })
+end, { force = true })
+
+
+-- actions
+vim.api.nvim_create_user_command('CopilotChatExplain', function()
+  local chat = require('CopilotChat.extensions')
+  chat.action("explain")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatFix', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("fix")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatImplement', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("implement")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatOptimize', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("optimize")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatReview', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("review")
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatRefactor', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("refactor")
+end, { force = true })
+
+-- actions inline
+vim.api.nvim_create_user_command('CopilotChatExplain', function()
+  local chat = require('CopilotChat.extensions')
+  chat.action("explain", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatFix', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("fix", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatImplement', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("implement", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatOptimize', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("optimize", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatReview', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("review", { inline = true })
+end, { force = true })
+
+vim.api.nvim_create_user_command('CopilotChatRefactor', function()
+  local chat = require('CopilotChat.extensions')
+  chat.open_chat("refactor", { inline = true })
+end, { force = true })
+
+
+
+
 local function complete_load()
   local chat = require('CopilotChat')
   local options = vim.tbl_map(function(file)
