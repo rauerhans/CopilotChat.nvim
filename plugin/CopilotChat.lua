@@ -201,6 +201,137 @@ vim.api.nvim_create_user_command('CopilotChatRefactor', function()
   chat.open_chat("refactor", { inline = true })
 end, { force = true })
 
+-- list chat history
+vim.api.nvim_create_user_command('CopilotChatHistory', function()
+  local chat = require('CopilotChat.extensions')
+  chat.list_chat_history()
+end, { force = true })
+
+
+
+-- create co
+vim.api.nvim_create_user_command("CopilotChatCommitMessage", function()
+  local chat = require("CopilotChat")
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  -- Determine which prompt command to use based on work environment
+  local is_work_env = vim.fn.getenv("IS_WORK") == "true"
+  local prompt = "/" .. (is_work_env and "commitwork" or "commit")
+
+  chat.reset() -- Reset previous chat state
+
+  vim.fn.start_spinner(bufnr, "Generating commit message...")
+
+  chat.ask(prompt, {
+    callback = function(response)
+      vim.fn.stop_spinner(bufnr)
+
+      -- Convert response to table of lines and ensure it's always an array
+      local lines = type(response) == "string" and vim.split(response, "\n")
+          or (type(response) == "table" and response or {})
+      table.insert(lines, "")
+
+      -- Insert the response at cursor position
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      -- Set cursor on the last line
+      vim.cmd("normal! G")
+      return response
+    end,
+    context = { "git_staged" },
+    headless = true,
+    model = vim.fn.getenv("COPILOT_MODEL_CHEAP"),
+    system_prompt = "/COPILOT_INSTRUCTIONS",
+  })
+end, {})
+
+vim.api.nvim_create_user_command("CopilotCodeChatReview", function()
+  local chat = require("CopilotChat")
+
+  chat.reset() -- Reset previous chat state
+
+  chat.ask("/review", {
+    callback = function(response)
+      local function accept_code_review()
+        vim.keymap.del("n", "<c-]>", { buffer = true })
+
+        chat.close()
+
+        vim.api.nvim_win_close(0, false)
+        vim.cmd("vertical Git")
+        vim.cmd("Git commit")
+      end
+
+      vim.keymap.set("n", "<c-]>", accept_code_review, { buffer = true })
+      return response
+    end,
+    context = { "git_staged" },
+    model = vim.fn.getenv("COPILOT_MODEL_REASON"),
+    selection = false,
+    system_prompt = "/COPILOT_REVIEW",
+    window = {
+      layout = "replace",
+    },
+  })
+end, {})
+
+vim.api.nvim_create_user_command("CopilotChatPrReview", function()
+  local snacks = require("snacks")
+  local branches = vim.git.list_remote_branches()
+
+  local items = {}
+  for i, branch in ipairs(branches) do
+    table.insert(items, {
+      idx = i,
+      file = branch.name,
+      text = branch.name,
+      time = branch.time,
+    })
+  end
+
+  snacks.picker({
+    title = "Select a branch to review",
+    items = items,
+    layout = {
+      preset = "vertical",
+      hidden = { "preview" },
+    },
+    format = function(item)
+      local time = vim.fn.fmt_relative_time(item.time)
+
+      return {
+        { string.format("%-5s", time), "SnacksPickerLabel" },
+        { item.file },
+      }
+    end,
+    confirm = function(picker, item)
+      picker:close()
+
+      vim.git.diff_branch(item.text, function(diff)
+        local prompt = table.concat({
+          "> /review",
+          " ",
+          "```gitcommit",
+          table.concat(diff.commit_lines, "\n"),
+          "```",
+          " ",
+          "```diff",
+          table.concat(diff.diff_lines, "\n"),
+          "```",
+        }, "\n")
+
+        vim.schedule(function()
+          new_chat_window(prompt, {
+            model = vim.fn.getenv("COPILOT_MODEL_REASON"),
+            selection = false,
+            system_prompt = "/COPILOT_INSTRUCTIONS",
+          })
+        end)
+      end)
+    end,
+  })
+end, {})
+
 
 
 
