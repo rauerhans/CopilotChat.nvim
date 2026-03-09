@@ -216,9 +216,9 @@ function M.resolve_functions(prompt, config)
           local content_out = nil
           if content.uri then
             if
-              not vim.tbl_contains(resolved_resources, function(resource)
-                return resource.uri == content.uri
-              end, { predicate = true })
+                not vim.tbl_contains(resolved_resources, function(resource)
+                  return resource.uri == content.uri
+                end, { predicate = true })
             then
               content_out = '##' .. content.uri
               table.insert(resolved_resources, content)
@@ -322,23 +322,23 @@ function M.resolve_prompt(prompt, config)
     local custom_instructions = vim.trim(require('CopilotChat.instructions.custom_instructions'))
     for _, instruction in ipairs(find_custom_instructions(source.cwd(), config)) do
       config.system_prompt = vim.trim(config.system_prompt)
-        .. '\n'
-        .. custom_instructions:gsub('{FILENAME}', instruction.filename):gsub('{CONTENT}', instruction.content)
+          .. '\n'
+          .. custom_instructions:gsub('{FILENAME}', instruction.filename):gsub('{CONTENT}', instruction.content)
     end
 
     config.system_prompt = vim.trim(config.system_prompt) .. '\n' .. config.prompts.COPILOT_BASE.system_prompt
     config.system_prompt = vim.trim(config.system_prompt)
-      .. '\n'
-      .. vim.trim(require('CopilotChat.instructions.tool_use'))
+        .. '\n'
+        .. vim.trim(require('CopilotChat.instructions.tool_use'))
 
     if config.diff == 'unified' then
       config.system_prompt = vim.trim(config.system_prompt)
-        .. '\n'
-        .. vim.trim(require('CopilotChat.instructions.edit_file_unified'))
+          .. '\n'
+          .. vim.trim(require('CopilotChat.instructions.edit_file_unified'))
     else
       config.system_prompt = vim.trim(config.system_prompt)
-        .. '\n'
-        .. vim.trim(require('CopilotChat.instructions.edit_file_block'))
+          .. '\n'
+          .. vim.trim(require('CopilotChat.instructions.edit_file_block'))
     end
 
     config.system_prompt = config.system_prompt:gsub('{OS_NAME}', vim.uv.os_uname().sysname)
