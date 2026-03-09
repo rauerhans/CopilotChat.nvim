@@ -209,7 +209,7 @@ end, { force = true })
 
 
 
--- create co
+-- create commit message
 vim.api.nvim_create_user_command("CopilotChatCommitMessage", function()
   local chat = require("CopilotChat")
   local bufnr = vim.api.nvim_get_current_buf()
