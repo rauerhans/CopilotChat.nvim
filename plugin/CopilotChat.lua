@@ -12,21 +12,21 @@ local group = vim.api.nvim_create_augroup('CopilotChat', {})
 
 -- Setup highlights
 local function setup_highlights()
-  vim.api.nvim_set_hl(0, 'CopilotChatHeader', { link = '@markup.heading.2.markdown', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatSeparator', { link = '@punctuation.special.markdown', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatSelection', { link = 'Visual', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatStatus', { link = 'DiagnosticHint', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatHelp', { link = 'DiagnosticInfo', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatResource', { link = 'Constant', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatTool', { link = 'Function', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatPrompt', { link = 'Statement', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatModel', { link = 'Type', default = true })
-  vim.api.nvim_set_hl(0, 'CopilotChatUri', { link = 'Underlined', default = true })
+  vim.api.nvim_set_hl(0, 'AIHeader', { link = '@markup.heading.2.markdown', default = true })
+  vim.api.nvim_set_hl(0, 'AISeparator', { link = '@punctuation.special.markdown', default = true })
+  vim.api.nvim_set_hl(0, 'AISelection', { link = 'Visual', default = true })
+  vim.api.nvim_set_hl(0, 'AIStatus', { link = 'DiagnosticHint', default = true })
+  vim.api.nvim_set_hl(0, 'AIHelp', { link = 'DiagnosticInfo', default = true })
+  vim.api.nvim_set_hl(0, 'AIResource', { link = 'Constant', default = true })
+  vim.api.nvim_set_hl(0, 'AITool', { link = 'Function', default = true })
+  vim.api.nvim_set_hl(0, 'AIPrompt', { link = 'Statement', default = true })
+  vim.api.nvim_set_hl(0, 'AIModel', { link = 'Type', default = true })
+  vim.api.nvim_set_hl(0, 'AIUri', { link = 'Underlined', default = true })
 
-  vim.api.nvim_set_hl(0, 'CopilotChatAnnotation', { link = 'ColorColumn', default = true })
-  local fg = vim.api.nvim_get_hl(0, { name = 'CopilotChatStatus', link = false }).fg
-  local bg = vim.api.nvim_get_hl(0, { name = 'CopilotChatAnnotation', link = false }).bg
-  vim.api.nvim_set_hl(0, 'CopilotChatAnnotationHeader', { fg = fg, bg = bg })
+  vim.api.nvim_set_hl(0, 'AIAnnotation', { link = 'ColorColumn', default = true })
+  local fg = vim.api.nvim_get_hl(0, { name = 'AIStatus', link = false }).fg
+  local bg = vim.api.nvim_get_hl(0, { name = 'AIAnnotation', link = false }).bg
+  vim.api.nvim_set_hl(0, 'AIAnnotationHeader', { fg = fg, bg = bg })
 end
 vim.api.nvim_create_autocmd('ColorScheme', {
   group = group,
@@ -37,20 +37,20 @@ vim.api.nvim_create_autocmd('ColorScheme', {
 setup_highlights()
 
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = 'copilot-chat',
+  pattern = 'copilot-chat-fork',
   group = group,
   callback = vim.schedule_wrap(function()
-    vim.cmd.syntax('match CopilotChatResource "#\\S\\+"')
-    vim.cmd.syntax('match CopilotChatTool "@\\S\\+"')
-    vim.cmd.syntax('match CopilotChatPrompt "/\\S\\+"')
-    vim.cmd.syntax('match CopilotChatModel "\\$\\S\\+"')
-    vim.cmd.syntax('match CopilotChatUri "##\\S\\+"')
+    vim.cmd.syntax('match AIResource "#\\S\\+"')
+    vim.cmd.syntax('match AITool "@\\S\\+"')
+    vim.cmd.syntax('match AIPrompt "/\\S\\+"')
+    vim.cmd.syntax('match AIModel "\\$\\S\\+"')
+    vim.cmd.syntax('match AIUri "##\\S\\+"')
   end),
 })
 
 -- Setup commands
-vim.api.nvim_create_user_command('CopilotChat', function(args)
-  local chat = require('CopilotChat')
+vim.api.nvim_create_user_command('AI', function(args)
+  local chat = require('AI')
   local input = args.args
   if input and vim.trim(input) ~= '' then
     chat.ask(input)
@@ -62,147 +62,147 @@ end, {
   force = true,
   range = true,
 })
-vim.api.nvim_create_user_command('CopilotChatPrompts', function()
+vim.api.nvim_create_user_command('AIPrompts', function()
   local chat = require('CopilotChat')
   chat.select_prompt()
 end, { force = true, range = true })
-vim.api.nvim_create_user_command('CopilotChatModels', function()
+vim.api.nvim_create_user_command('AIModels', function()
   local chat = require('CopilotChat')
   chat.select_model()
 end, { force = true })
-vim.api.nvim_create_user_command('CopilotChatOpen', function()
+vim.api.nvim_create_user_command('AIOpen', function()
   local chat = require('CopilotChat')
   chat.open()
 end, { force = true })
-vim.api.nvim_create_user_command('CopilotChatClose', function()
+vim.api.nvim_create_user_command('AIClose', function()
   local chat = require('CopilotChat')
   chat.close()
 end, { force = true })
-vim.api.nvim_create_user_command('CopilotChatToggle', function()
+vim.api.nvim_create_user_command('AIToggle', function()
   local chat = require('CopilotChat')
   chat.toggle()
 end, { force = true })
-vim.api.nvim_create_user_command('CopilotChatStop', function()
+vim.api.nvim_create_user_command('AIStop', function()
   local chat = require('CopilotChat')
   chat.stop()
 end, { force = true })
-vim.api.nvim_create_user_command('CopilotChatReset', function()
+vim.api.nvim_create_user_command('AIReset', function()
   local chat = require('CopilotChat')
   chat.reset()
 end, { force = true })
-vim.api.nvim_create_user_command('CopilotChatHistory', function()
+vim.api.nvim_create_user_command('AIHistory', function()
   local chat = require('CopilotChat')
   chat.load_history()
 end, { force = true })
 
 
 -- open chat
-vim.api.nvim_create_user_command('CopilotChatAssistance', function()
+vim.api.nvim_create_user_command('AIAssistance', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("assistance")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatGeneric', function()
+vim.api.nvim_create_user_command('AIGeneric', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("generic")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatSearch', function()
+vim.api.nvim_create_user_command('AISearch', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("search")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatArchitect', function()
+vim.api.nvim_create_user_command('AIArchitect', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("architect")
 end, { force = true })
 
 -- open chat inline
-vim.api.nvim_create_user_command('CopilotChatAssistance', function()
+vim.api.nvim_create_user_command('AIAssistance', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("assistance", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatGeneric', function()
+vim.api.nvim_create_user_command('AIGeneric', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("generic", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatSearch', function()
+vim.api.nvim_create_user_command('AISearch', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("search", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatArchitect', function()
+vim.api.nvim_create_user_command('AIArchitect', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("architect", { inline = true })
 end, { force = true })
 
 
 -- actions
-vim.api.nvim_create_user_command('CopilotChatExplain', function()
+vim.api.nvim_create_user_command('AIExplain', function()
   local chat = require('CopilotChat.extensions')
   chat.action("explain")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatFix', function()
+vim.api.nvim_create_user_command('AIFix', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("fix")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatImplement', function()
+vim.api.nvim_create_user_command('AIImplement', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("implement")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatOptimize', function()
+vim.api.nvim_create_user_command('AIOptimize', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("optimize")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatReview', function()
+vim.api.nvim_create_user_command('AIReview', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("review")
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatRefactor', function()
+vim.api.nvim_create_user_command('AIRefactor', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("refactor")
 end, { force = true })
 
 -- actions inline
-vim.api.nvim_create_user_command('CopilotChatExplain', function()
+vim.api.nvim_create_user_command('AIExplain', function()
   local chat = require('CopilotChat.extensions')
   chat.action("explain", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatFix', function()
+vim.api.nvim_create_user_command('AIFix', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("fix", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatImplement', function()
+vim.api.nvim_create_user_command('AIImplement', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("implement", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatOptimize', function()
+vim.api.nvim_create_user_command('AIOptimize', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("optimize", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatReview', function()
+vim.api.nvim_create_user_command('AIReview', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("review", { inline = true })
 end, { force = true })
 
-vim.api.nvim_create_user_command('CopilotChatRefactor', function()
+vim.api.nvim_create_user_command('AIRefactor', function()
   local chat = require('CopilotChat.extensions')
   chat.open_chat("refactor", { inline = true })
 end, { force = true })
 
 -- list chat history
-vim.api.nvim_create_user_command('CopilotChatHistory', function()
+vim.api.nvim_create_user_command('AIHistory', function()
   local chat = require('CopilotChat.extensions')
   chat.list_chat_history()
 end, { force = true })
@@ -210,7 +210,7 @@ end, { force = true })
 
 
 -- create commit message
-vim.api.nvim_create_user_command("CopilotChatCommitMessage", function()
+vim.api.nvim_create_user_command("AICommitMessage", function()
   local chat = require("CopilotChat")
   local bufnr = vim.api.nvim_get_current_buf()
 
@@ -275,7 +275,7 @@ vim.api.nvim_create_user_command("CopilotCodeChatReview", function()
   })
 end, {})
 
-vim.api.nvim_create_user_command("CopilotChatPrReview", function()
+vim.api.nvim_create_user_command("AIPrReview", function()
   local snacks = require("snacks")
   local branches = vim.git.list_remote_branches()
 
@@ -347,11 +347,11 @@ local function complete_load()
 
   return options
 end
---vim.api.nvim_create_user_command('CopilotChatSave', function(args)
+--vim.api.nvim_create_user_command('AISave', function(args)
 --  local chat = require('CopilotChat')
 --  chat.save(args.args)
 --end, { nargs = '*', force = true, complete = complete_load })
-vim.api.nvim_create_user_command('CopilotChatSave', function(args)
+vim.api.nvim_create_user_command('AISave', function(args)
   local chat = require('CopilotChat')
   local name = args.args and vim.trim(args.args) or nil
   if name and name ~= '' then
@@ -364,7 +364,7 @@ end, {
   desc = 'Save current conversation',
 })
 
-vim.api.nvim_create_user_command('CopilotChatLoad', function(args)
+vim.api.nvim_create_user_command('AILoad', function(args)
   local chat = require('CopilotChat')
   chat.load(args.args)
 end, { nargs = '*', force = true, complete = complete_load })
