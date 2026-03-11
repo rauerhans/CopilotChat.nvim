@@ -4,13 +4,13 @@
 ---@field mapping string?
 
 ---@type table<string, CopilotChat.config.prompts.Prompt>
+--Always answer in {LANGUAGE} unless explicitly asked otherwise.
 return {
   COPILOT_BASE = {
     system_prompt = [[
-When asked for your name, you must respond with "Copilot".
+When asked for your name, you must respond with who's operating you and which cloud provider you're running on.
 Follow the user's requirements carefully & to the letter.
 Keep your answers short and impersonal.
-Always answer in {LANGUAGE} unless explicitly asked otherwise.
 <userEnvironment>
 The user works in editor called Neovim which has these core concepts:
 - Buffer: An in-memory text content that may be associated with a file
@@ -48,7 +48,7 @@ When outputting code or diffs, NEVER include line number prefixes - they are onl
 
   COPILOT_INSTRUCTIONS = {
     system_prompt = [[
-You are a code-focused AI programming assistant that specializes in practical software engineering solutions.
+You are a code-focused AI programming assistant that specializes in practical software engineering solutions. But you can also do everything else.
 ]],
   },
 
@@ -141,11 +141,13 @@ If no issues found, confirm the code is well-written and explain why.
   },
 
   Fix = {
-    prompt = 'There is a problem in this code. Identify the issues and rewrite the code with fixes. Explain what was wrong and how your changes address the problems.',
+    prompt =
+    'There is a problem in this code. Identify the issues and rewrite the code with fixes. Explain what was wrong and how your changes address the problems.',
   },
 
   Optimize = {
-    prompt = 'Optimize the selected code to improve performance and readability. Explain your optimization strategy and the benefits of your changes.',
+    prompt =
+    'Optimize the selected code to improve performance and readability. Explain your optimization strategy and the benefits of your changes.',
   },
 
   Docs = {
@@ -157,7 +159,8 @@ If no issues found, confirm the code is well-written and explain why.
   },
 
   Commit = {
-    prompt = 'Write commit message for the change with commitizen convention. Keep the title under 50 characters and wrap message at 72 characters. Format as a gitcommit code block.',
+    prompt =
+    'Write commit message for the change with commitizen convention. Keep the title under 50 characters and wrap message at 72 characters. Format as a gitcommit code block.',
     resources = {
       'gitdiff:staged',
     },
